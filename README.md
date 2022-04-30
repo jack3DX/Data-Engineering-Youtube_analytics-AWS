@@ -190,10 +190,67 @@ Once I ran the job, the following errors appeared:
 There are some characters of Japanese and Russian language, which are not encoded as UTF-8. For the sake of this project, I've filtered out the data.<br>
 First I've added a predicate_pushdown to filter only Canada, Great Britain and USA files on datasource. I'm not ignoring the data itself, but firstly I need to know if the job works.
 
-After I suceeded, I went to create a new crawler, named "de-youtube-cleaned-csv-to-parquet-etl", with path "s3://de-youtube-cleansed-useast1-dev/youtube/raw_statistics/", and database "db_youtube_cleaned".
+After I suceeded, I went to create a new crawler, named "de-youtube-cleaned-csv-to-parquet-etl", with path "s3://de-youtube-cleansed-useast1-dev/youtube/raw_statistics/", and database "db_youtube_cleaned". I've also ran the job to see if it was working indeed.
 
 
+## Adding a trigger to the Lambda function
 
+The main purpose of adding a trigger to the Lambda function is to make it run automatically, everytime there's data ingestion. By the time I got to this point, I had only tested the function with the s3-put test event.
 
+In summary, I wanted to execute all the json files in the raw_statistics_reference_data and whenever a file is uploaded, AWS environment should process all of them by itself. As an example, if I added a new region to the files, it should automatically be prompted in there.
 
+![alt text](https://github.com/jack3DX/Data-Engineering-Youtube_analytics-AWS/blob/main/images/Trigger.PNG?raw=true)
 
+On Lambda screen, I've added the trigger with the following settings:
+- bucket: de-youtube-raw-useast1-dev
+- event type: all object create events
+- path: youtube/raw_statistics_reference_data/
+- suffix: .json
+
+To test this trigger, I had to delete all of the contents of the raw bucket and also the output file of the cleaned version (de-youtube-cleansed-useast1-dev / parquet file) and re-upload just as I did in the beginning of the project.
+
+Everything went ok, there wasn't any kind of error.
+
+# Building a reporting layer (analytics bucket)
+
+In this step, I built a reporting layer with some ETL from the Cleansed bucket. This is generally a step that is done everyday in data pipelines.
+
+As the data gets larger everytime, preprocessing it is really needed because the costs to query the data everytime become exponencially bigger. Once again, I used Glue to create the new ETL pipeline.
+
+## Creating a Glue Job
+
+Once in Glue Studio, I've opened the jobs page to create a new one, with the following settings:
+
+![alt text](https://github.com/jack3DX/Data-Engineering-Youtube_analytics-AWS/blob/main/images/GlueJob.PNG?raw=true)
+
+For this step, I created a new bucket, called "de-youtube-analytics-useast1-dev".
+
+I've also created a new database in Athena, with the following query command:
+
+        CREATE DATABASE db_youtube_analytics;
+
+Back to the image of this section, the settings of the job are:
+- 1st table is raw_statistics from db_youtube_cleaned
+- 2nd table is cleaned_statistics_reference_data from db_youtube_cleaned
+- Join type is INNER JOIN
+- Condition is category_id = id
+- Data target is parquet format, snappy compression and the analytics bucket
+- "Create a table in the Data Catalog..."
+- Table name: final_analytics
+- Partition keys: region and category_id (as both are being used to analyze the data, category_id will have its own folders in the destiny bucket)
+
+Once I set the role and ran the job, everything went ok. The final ETL pipeline is completed.
+
+## Final considerations
+
+Basically, the steps for this project are presented on one of AWS documentation pictures, that may be seen below:
+
+![alt text](https://github.com/jack3DX/Data-Engineering-Youtube_analytics-AWS/blob/main/images/AWSDataFlow.PNG?raw=true)
+
+I just didn't use Redshift as it wasn't necessary.
+
+After all, it was a great project, provided some good experience and made me flow even deeper into AWS applications. I myself find AWS easier and simpler than GCP platform.
+
+As a future repo, I intend to present the analytics bucket data on some of the AWS apps for Data Visualization.
+
+Feel free to contact me in case you have any questions.
