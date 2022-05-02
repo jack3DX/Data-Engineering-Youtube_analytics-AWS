@@ -160,7 +160,7 @@ The INNER JOIN now works (I present my query below):
 
 Now there's the need to process the raw version that is stored into the raw bucket to move all the transformed data into one single bucket.
 
-*Glue ETL Job
+## Glue ETL Job
 
 Glue ETL Jobs may be used to automatically do the process mentioned above.
 
