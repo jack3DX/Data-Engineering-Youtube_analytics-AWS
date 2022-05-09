@@ -1,5 +1,7 @@
 # Data Engineering project with Youtube analytics data and AWS tools
 
+IN CASE YOU WOULD LIKE TO REPRODUCE THIS PROJECT TO LEARN, IT COSTS USD 0,69 IF YOU DO IT EXACTLY LIKE I DID AND FOLLOW MY PATH. 
+
 In this repository, I'll show how to build a simple data pipeline with AWS. 
 
 I'll also discuss about:
